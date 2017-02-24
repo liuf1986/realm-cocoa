@@ -9,6 +9,8 @@ x.x.x Release notes (yyyy-MM-dd)
 
 * Add a `{RLM}SyncUser.isAdmin` property indicating whether a user is a Realm
   Object Server administrator.
+* Add RLMResults's collection aggregate methods to RLMArray.
+* Add support for calling the aggregate methods on unmanaged Lists.
 
 ### Bugfixes
 
