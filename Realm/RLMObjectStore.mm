@@ -43,6 +43,12 @@ using namespace realm;
 static void validateValueForProperty(__unsafe_unretained id const obj,
                                      __unsafe_unretained RLMProperty *const prop,
                                      RLMClassInfo const& info) {
+    if (prop.array) {
+        if (obj && obj != NSNull.null && ![obj conformsToProtocol:@protocol(NSFastEnumeration)]) {
+            @throw RLMException(@"Array property value (%@) is not enumerable.", obj);
+        }
+        return;
+    }
     switch (prop.type) {
         case RLMPropertyTypeString:
         case RLMPropertyTypeBool:
@@ -58,14 +64,6 @@ static void validateValueForProperty(__unsafe_unretained id const obj,
             break;
         case RLMPropertyTypeObject:
             break;
-        case RLMPropertyTypeArray: {
-            if (obj != nil && obj != NSNull.null) {
-                if (![obj conformsToProtocol:@protocol(NSFastEnumeration)]) {
-                    @throw RLMException(@"Array property value (%@) is not enumerable.", obj);
-                }
-            }
-            break;
-        }
         case RLMPropertyTypeAny:
         case RLMPropertyTypeLinkingObjects:
             @throw RLMException(@"Invalid value '%@' for property '%@.%@'",
@@ -103,7 +101,7 @@ id RLMAccessorContext::value(id obj, size_t propIndex) {
         // this is mainly an issue when the object graph being added has cycles,
         // as it's not obvious that the user has to set the *ivars* to nil to
         // avoid leaking memory
-        if (prop.type == RLMPropertyTypeObject || prop.type == RLMPropertyTypeArray) {
+        if (prop.type == RLMPropertyTypeObject) {
             ((void(*)(id, SEL, id))objc_msgSend)(obj, prop.setterSel, nil);
         }
     }
@@ -123,7 +121,7 @@ id RLMAccessorContext::doGetValue(id obj, size_t propIndex, __unsafe_unretained 
     // Property value from an instance of this object type
     if ([obj isKindOfClass:_info.rlmObjectSchema.objectClass]) {
         if (prop.swiftIvar) {
-            if (prop.type == RLMPropertyTypeArray) {
+            if (prop.array) {
                 return static_cast<RLMListBase *>(object_getIvar(obj, prop.swiftIvar))._rlmArray;
             }
             else { // optional
@@ -161,6 +159,15 @@ id RLMAccessorContext::wrap(realm::List l) {
                                          property:currentProperty];
 }
 
+id RLMAccessorContext::wrap(realm::TableRef table) {
+    REALM_ASSERT(_parentObject);
+    REALM_ASSERT(currentProperty);
+    return [[RLMArraySubTable alloc] initWithTable:std::move(table)
+                                             realm:_realm
+                                        parentInfo:_parentObject->_info
+                                          property:currentProperty];
+}
+
 id RLMAccessorContext::wrap(realm::Object o) {
     return RLMCreateObjectAccessor(_realm, _info.linkTargetType(currentProperty.index), o.row().get_index());
 }
@@ -186,19 +193,8 @@ void RLMAccessorContext::did_change() {
     }
 }
 
-id RLMAccessorContext::value_for_property(id dict, std::string const&, size_t prop_index) {
-    return value(dict, prop_index);
-}
-
-bool RLMAccessorContext::dict_has_value_for_key(id dict, const std::string &prop_name) {
-    if ([dict respondsToSelector:@selector(objectForKey:)]) {
-        return [dict objectForKey:@(prop_name.c_str())];
-    }
-    return [dict valueForKey:@(prop_name.c_str())];
-}
-
-id RLMAccessorContext::dict_value_for_key(id dict, const std::string &prop_name) {
-    return [dict valueForKey:@(prop_name.c_str())];
+OptionalId RLMAccessorContext::value_for_property(id dict, std::string const&, size_t prop_index) {
+    return OptionalId{value(dict, prop_index)};
 }
 
 size_t RLMAccessorContext::list_size(id v) { return [v count]; }
@@ -206,15 +202,10 @@ id RLMAccessorContext::list_value_at_index(id v, size_t index) {
     return [v objectAtIndex:index];
 }
 
-bool RLMAccessorContext::has_default_value_for_property(Realm*, ObjectSchema const&, std::string const& prop)
-{
-    return defaultValue(@(prop.c_str()));
-}
-
-id RLMAccessorContext::default_value_for_property(Realm*, ObjectSchema const&,
+OptionalId RLMAccessorContext::default_value_for_property(Realm*, ObjectSchema const&,
                                      std::string const& prop)
 {
-    return defaultValue(@(prop.c_str()));
+    return OptionalId{defaultValue(@(prop.c_str()))};
 }
 
 size_t RLMAccessorContext::to_object_index(SharedRealm, id value, std::string const& object_type, bool update)
@@ -267,8 +258,14 @@ void RLMInitializeSwiftAccessorGenerics(__unsafe_unretained RLMObjectBase *const
     }
 
     for (RLMProperty *prop in object->_objectSchema.swiftGenericProperties) {
-        if (prop->_type == RLMPropertyTypeArray) {
-            RLMArray *array = [[RLMArrayLinkView alloc] initWithParent:object property:prop];
+        if (prop.array) {
+            RLMArray *array;
+            if (prop.type == RLMPropertyTypeObject) {
+                array = [[RLMArrayLinkView alloc] initWithParent:object property:prop];
+            }
+            else {
+                array = [[RLMArraySubTable alloc] initWithParent:object property:prop];
+            }
             [object_getIvar(object, prop.swiftIvar) set_rlmArray:array];
         }
         else if (prop.type == RLMPropertyTypeLinkingObjects) {
@@ -315,7 +312,7 @@ void RLMAddObjectToRealm(__unsafe_unretained RLMObjectBase *const object,
                               createOrUpdate, &object->_row);
     }
     catch (std::exception const& e) {
-        @throw RLMException(@"%s", e.what());
+        @throw RLMException(e);
     }
     object_setClass(object, info.rlmObjectSchema.accessorClass);
     RLMInitializeSwiftAccessorGenerics(object);

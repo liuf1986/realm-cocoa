@@ -53,6 +53,8 @@ void RLMSetErrorOrThrow(NSError *error, NSError **outError);
 BOOL RLMIsObjectValidForProperty(id obj, RLMProperty *prop);
 // throw an exception if the object is not a valid value for the property
 void RLMValidateValueForProperty(id obj, RLMProperty *prop);
+BOOL RLMValidateValue(id value, RLMPropertyType type, bool optional, bool array,
+                      NSString *objectClassName);
 
 // gets default values for the given schema (+defaultPropertyValues)
 // merges with native property defaults if Swift class

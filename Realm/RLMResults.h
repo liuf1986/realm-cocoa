@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  `RLMResults` cannot be directly instantiated.
  */
-@interface RLMResults<RLMObjectType: RLMObject *> : NSObject<RLMCollection, NSFastEnumeration>
+@interface RLMResults<RLMObjectType> : NSObject<RLMCollection, NSFastEnumeration>
 
 #pragma mark - Properties
 
@@ -58,7 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, assign) NSUInteger count;
 
 /**
- The class name (i.e. type) of the `RLMObject`s contained in the results collection.
+ The class name (i.e. type) of the objects contained in the results collection.
  */
 @property (nonatomic, readonly, copy) NSString *objectClassName;
 
@@ -82,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param index   The index to look up.
 
- @return An `RLMObject` of the type contained in the results collection.
+ @return An object of the type contained in the results collection.
  */
 - (RLMObjectType)objectAtIndex:(NSUInteger)index;
 
@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  Returns `nil` if called on an empty results collection.
 
- @return An `RLMObject` of the type contained in the results collection.
+ @return An object of the type contained in the results collection.
  */
 - (nullable RLMObjectType)firstObject;
 
@@ -100,7 +100,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  Returns `nil` if called on an empty results collection.
 
- @return An `RLMObject` of the type contained in the results collection.
+ @return An object of the type contained in the results collection.
  */
 - (nullable RLMObjectType)lastObject;
 

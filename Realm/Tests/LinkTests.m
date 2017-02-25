@@ -113,7 +113,7 @@
     XCTAssertThrows(dog.dogName, @"Dog object should be invalid after being deleted from the realm");
 
     // refresh owner and check
-    owner = [realm allObjects:[OwnerObject className]].firstObject;
+    owner = [OwnerObject allObjectsInRealm:realm].firstObject;
     XCTAssertNotNil(owner, @"Should have 1 owner");
     XCTAssertNil(owner.dog, @"Dog should be nullified when deleted");
     XCTAssertEqual([DogObject objectsInRealm:realm withPredicate:nil].count, 0U);

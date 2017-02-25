@@ -27,6 +27,14 @@ class RLMClassInfo;
 class RLMObservationInfo;
 
 using namespace realm;
+
+struct OptionalId {
+    id value;
+    OptionalId(id value) : value(value) { }
+    operator id() const noexcept { return value; }
+    id operator*() const noexcept { return value; }
+};
+
 class RLMAccessorContext {
 public:
     RLMAccessorContext(RLMObjectBase *parentObject);
@@ -35,6 +43,7 @@ public:
     id defaultValue(NSString *key);
     id value(id obj, size_t propIndex);
 
+    id wrap(realm::TableRef);
     id wrap(realm::List);
     id wrap(realm::Results);
     id wrap(realm::Object);
@@ -46,10 +55,9 @@ public:
     void will_change(realm::Row const&, realm::Property const&);
     void did_change();
 
-    id value_for_property(id dict, std::string const&, size_t prop_index);
-
-    bool dict_has_value_for_key(id dict, const std::string &prop_name);
-    id dict_value_for_key(id dict, const std::string &prop_name);
+    OptionalId value_for_property(id dict, std::string const&, size_t prop_index);
+    OptionalId default_value_for_property(Realm*, ObjectSchema const&,
+                                         std::string const& prop);
 
     size_t list_size(id v);
     id list_value_at_index(id v, size_t index);
@@ -60,11 +68,6 @@ public:
             func(value);
         }
     }
-
-    bool has_default_value_for_property(Realm*, ObjectSchema const&,
-                                               std::string const& prop);
-    id default_value_for_property(Realm*, ObjectSchema const&,
-                                         std::string const& prop);
 
     Timestamp to_timestamp(id v) { return RLMTimestampForNSDate(v); }
     bool to_bool(id v) { return [v boolValue]; }
@@ -83,6 +86,7 @@ public:
     id from_string(StringData v) { return @(v.data()); }
     id from_timestamp(Timestamp v) { return RLMTimestampToNSDate(v); }
     id from_list(List v) { return wrap(std::move(v)); }
+    id from_table(TableRef v) { return wrap(std::move(v)); }
     id from_results(Results v) { return wrap(std::move(v)); }
     id from_object(Object v) { return wrap(v); }
 

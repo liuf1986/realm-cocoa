@@ -23,6 +23,7 @@
 #import <Realm/RLMResults.h>
 
 #import <realm/link_view_fwd.hpp>
+#import <realm/table_ref.hpp>
 
 namespace realm {
     class Results;
@@ -35,16 +36,18 @@ class RLMObservationInfo;
 @interface RLMArray () {
 @protected
     NSString *_objectClassName;
+    RLMPropertyType _type;
+    bool _optional;
 @public
     // The name of the property which this RLMArray represents
     NSString *_key;
     __weak RLMObjectBase *_parentObject;
 }
+
+@property (nonatomic, readonly) RLMPropertyType type;
+@property (nonatomic, readonly) bool optional;
 @end
 
-//
-// LinkView backed RLMArray subclass
-//
 @interface RLMArrayLinkView : RLMArray <RLMFastEnumerable>
 - (instancetype)initWithParent:(RLMObjectBase *)parentObject property:(RLMProperty *)property;
 - (RLMArrayLinkView *)initWithList:(realm::List)list
@@ -54,6 +57,14 @@ class RLMObservationInfo;
 
 // deletes all objects in the RLMArray from their containing realms
 - (void)deleteObjectsFromRealm;
+@end
+
+@interface RLMArraySubTable : RLMArray <RLMFastEnumerable>
+- (instancetype)initWithParent:(RLMObjectBase *)parentObject property:(RLMProperty *)property;
+- (RLMArraySubTable *)initWithTable:(realm::TableRef)table
+                             realm:(__unsafe_unretained RLMRealm *const)realm
+                        parentInfo:(RLMClassInfo *)parentInfo
+                          property:(__unsafe_unretained RLMProperty *const)property;
 @end
 
 void RLMValidateArrayObservationKey(NSString *keyPath, RLMArray *array);

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2014 Realm Inc.
+// Copyright 2017 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,62 +19,293 @@
 import XCTest
 import RealmSwift
 
-class ListTests: TestCase {
-    var str1: SwiftStringObject?
-    var str2: SwiftStringObject?
-    var arrayObject: SwiftArrayPropertyObject!
-    var array: List<SwiftStringObject>?
+protocol ObjectFactory {
+    static func isManaged() -> Bool
+}
 
-    func createArray() -> SwiftArrayPropertyObject {
-        fatalError("abstract")
+final class ManagedObjectFactory: ObjectFactory {
+    static func isManaged() -> Bool { return true }
+}
+final class UnmanagedObjectFactory: ObjectFactory {
+    static func isManaged() -> Bool { return false }
+}
+
+protocol ValueFactory {
+    associatedtype T: RealmManaged, Equatable
+    static func array(_ obj: SwiftListObject) -> List<T>
+    static func values() -> [T]
+}
+
+final class IntFactory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int> {
+        return obj.int
     }
 
-    func createArrayWithLinks() -> SwiftListOfSwiftObject {
-        fatalError("abstract")
+    static func values() -> [Int] {
+        return [1, 2, 3]
     }
+}
+
+final class Int8Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int8> {
+        return obj.int8
+    }
+
+    static func values() -> [Int8] {
+        return [1, 2, 3]
+    }
+}
+
+final class Int16Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int16> {
+        return obj.int16
+    }
+
+    static func values() -> [Int16] {
+        return [1, 2, 3]
+    }
+}
+
+final class Int32Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int32> {
+        return obj.int32
+    }
+
+    static func values() -> [Int32] {
+        return [1, 2, 3]
+    }
+}
+
+final class Int64Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int64> {
+        return obj.int64
+    }
+
+    static func values() -> [Int64] {
+        return [1, 2, 3]
+    }
+}
+
+/*
+final class OptionalIntFactory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int?> {
+        return obj.intOpt
+    }
+
+    static func values() -> [Int?] {
+        return [nil, 1, 2, 3]
+    }
+}
+
+final class OptionalInt8Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int8?> {
+        return obj.int8Opt
+    }
+
+    static func values() -> [Int8?] {
+        return [nil, 1, 2, 3]
+    }
+}
+
+final class OptionalInt16Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int16?> {
+        return obj.int16Opt
+    }
+
+    static func values() -> [Int16?] {
+        return [nil, 1, 2, 3]
+    }
+}
+
+final class OptionalInt32Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int32?> {
+        return obj.int32Opt
+    }
+
+    static func values() -> [Int32?] {
+        return [nil, 1, 2, 3]
+    }
+}
+
+final class OptionalInt64Factory: ValueFactory {
+    static func array(_ obj: SwiftListObject) -> List<Int64?> {
+        return obj.int64Opt
+    }
+
+    static func values() -> [Int64?] {
+        return [nil, 1, 2, 3]
+    }
+}
+*/
+
+class PrimitiveListTests<O: ObjectFactory, V: ValueFactory>: TestCase {
+    var realm: Realm!
+    var obj: SwiftListObject!
+    var array: List<V.T>!
+    var values: [V.T]!
 
     override func setUp() {
-        super.setUp()
-
-        let str1 = SwiftStringObject()
-        str1.stringCol = "1"
-        self.str1 = str1
-
-        let str2 = SwiftStringObject()
-        str2.stringCol = "2"
-        self.str2 = str2
-
-        arrayObject = createArray()
-        array = arrayObject.array
-
-        let realm = realmWithTestPath()
-        try! realm.write {
-            realm.add(str1)
-            realm.add(str2)
-        }
-
+        realm = try! Realm()
         realm.beginWrite()
+        obj = SwiftListObject()
+        if O.isManaged() {
+            realm.add(obj)
+        }
+        array = V.array(obj)
+        values = V.values()
     }
 
     override func tearDown() {
-        try! realmWithTestPath().commitWrite()
-
-        str1 = nil
-        str2 = nil
-        arrayObject = nil
-        array = nil
-
-        super.tearDown()
+        realm.cancelWrite()
+        realm = nil
     }
 
-    override class func defaultTestSuite() -> XCTestSuite {
-        // Don't run tests for the base class
-        if isEqual(ListTests.self) {
-            return XCTestSuite(name: "empty")
+    func testInvalidated() {
+        XCTAssertFalse(array.isInvalidated)
+        if let realm = obj.realm {
+            realm.delete(obj)
+            XCTAssertTrue(array.isInvalidated)
         }
-        return super.defaultTestSuite()
     }
 
+    func testIndexOf() {
+        XCTAssertNil(array.index(of: values[0]))
+
+        array.append(values[0])
+        XCTAssertEqual(0, array.index(of: values[0]))
+
+        array.append(values[1])
+        XCTAssertEqual(0, array.index(of: values[0]))
+        XCTAssertEqual(1, array.index(of: values[1]))
+    }
+
+    func testIndexMatching() {
+        XCTAssertNil(array.index(matching: "self = %@", values[0]))
+
+        array.append(values[0])
+        XCTAssertEqual(0, array.index(matching: "self = %@", values[0]))
+
+        array.append(values[1])
+        XCTAssertEqual(0, array.index(matching: "self = %@", values[0]))
+        XCTAssertEqual(1, array.index(matching: "self = %@", values[1]))
+    }
+
+    func testSubscript() {
+
+    }
+
+    func testFirst() {
+
+    }
+
+    func testLast() {
+
+    }
+
+    func testValueForKey() {
+
+    }
+
+    func testSetValueForKey() {
+
+    }
+
+    func testFilter() {
+
+    }
+
+    func testSorted() {
+
+    }
+
+    func testMin() {
+
+    }
+
+    func testMax() {
+
+    }
+
+    func testSum() {
+
+    }
+
+    func testAverage() {
+
+    }
+
+    func testInsert() {
+        XCTAssertEqual(Int(0), array.count)
+
+        array.insert(values[0], at: 0)
+        XCTAssertEqual(Int(1), array.count)
+        XCTAssertEqual(values[0], array[0])
+
+        array.insert(values[1], at: 0)
+        XCTAssertEqual(Int(2), array.count)
+        XCTAssertEqual(values[1], array[0])
+        XCTAssertEqual(values[0], array[1])
+
+        array.insert(values[2], at: 2)
+        XCTAssertEqual(Int(3), array.count)
+        XCTAssertEqual(values[1], array[0])
+        XCTAssertEqual(values[0], array[1])
+        XCTAssertEqual(values[2], array[2])
+
+        assertThrows(_ = array.insert(values[0], at: 4))
+        assertThrows(_ = array.insert(values[0], at: -1))
+    }
+
+    func testRemove() {
+
+    }
+
+    func testRemoveLast() {
+
+    }
+
+    func testRemoveAll() {
+
+    }
+
+    func testReplace() {
+
+    }
+
+    func testMove() {
+
+    }
+
+    func testSwap() {
+
+    }
+}
+
+func addTests<OF: ObjectFactory>(_ suite: XCTestSuite, _ type: OF.Type) {
+    _ = PrimitiveListTests<OF, IntFactory>.defaultTestSuite().tests.map(suite.addTest)
+    _ = PrimitiveListTests<OF, Int8Factory>.defaultTestSuite().tests.map(suite.addTest)
+    _ = PrimitiveListTests<OF, Int16Factory>.defaultTestSuite().tests.map(suite.addTest)
+    _ = PrimitiveListTests<OF, Int32Factory>.defaultTestSuite().tests.map(suite.addTest)
+    _ = PrimitiveListTests<OF, Int64Factory>.defaultTestSuite().tests.map(suite.addTest)
+}
+
+class UnmanagedPrimitiveListTests: TestCase {
+    override class func defaultTestSuite() -> XCTestSuite {
+        let suite = XCTestSuite(name: "Unmanaged Primitive Lists")
+        addTests(suite, UnmanagedObjectFactory.self)
+        return suite
+    }
+}
+
+class ManagedPrimitiveListTests: TestCase {
+    override class func defaultTestSuite() -> XCTestSuite {
+        let suite = XCTestSuite(name: "Managed Primitive Lists")
+        addTests(suite, ManagedObjectFactory.self)
+        return suite
+    }
+}
+
+/*
     func testPrimitive() {
         let obj = SwiftListObject()
         obj.int.append(5)
@@ -93,33 +324,22 @@ class ListTests: TestCase {
         XCTAssertEqual(obj.string[0], "str")
     }
 
-    func testInvalidated() {
-        guard let array = array else {
-            fatalError("Test precondition failure")
-        }
-        XCTAssertFalse(array.isInvalidated)
 
-        if let realm = arrayObject.realm {
-            realm.delete(arrayObject)
-            XCTAssertTrue(array.isInvalidated)
-        }
-    }
-
-    func testFastEnumerationWithMutation() {
-        guard let array = array, let str1 = str1, let str2 = str2 else {
-            fatalError("Test precondition failure")
-        }
-
-        array.append(objectsIn: [str1, str2, str1, str2, str1, str2, str1, str2, str1,
-            str2, str1, str2, str1, str2, str1, str2, str1, str2, str1, str2])
-        var str = ""
-        for obj in array {
-            str += obj.stringCol
-            array.append(objectsIn: [str1])
-        }
-
-        XCTAssertEqual(str, "12121212121212121212")
-    }
+//    func testFastEnumerationWithMutation() {
+//        guard let array = array, let str1 = str1, let str2 = str2 else {
+//            fatalError("Test precondition failure")
+//        }
+//
+//        array.append(objectsIn: [str1, str2, str1, str2, str1, str2, str1, str2, str1,
+//            str2, str1, str2, str1, str2, str1, str2, str1, str2, str1, str2])
+//        var str = ""
+//        for obj in array {
+//            str += obj.stringCol
+//            array.append(objectsIn: [str1])
+//        }
+//
+//        XCTAssertEqual(str, "12121212121212121212")
+//    }
 
     func testAppendObject() {
         guard let array = array, let str1 = str1, let str2 = str2 else {
@@ -334,127 +554,4 @@ class ListTests: TestCase {
             XCTAssertEqual(Int(2), otherArray.count)
         }
     }
-
-    func testPopulateEmptyArray() {
-        guard let array = array else {
-            fatalError("Test precondition failure")
-        }
-
-        XCTAssertEqual(array.count, 0, "Should start with no array elements.")
-
-        let obj = SwiftStringObject()
-        obj.stringCol = "a"
-        array.append(obj)
-        array.append(realmWithTestPath().create(SwiftStringObject.self, value: ["b"]))
-        array.append(obj)
-
-        XCTAssertEqual(array.count, 3)
-        XCTAssertEqual(array[0].stringCol, "a")
-        XCTAssertEqual(array[1].stringCol, "b")
-        XCTAssertEqual(array[2].stringCol, "a")
-
-        // Make sure we can enumerate
-        for obj in array {
-            XCTAssertTrue(obj.description.utf16.count > 0, "Object should have description")
-        }
-    }
-
-    func testEnumeratingListWithListProperties() {
-        let arrayObject = createArrayWithLinks()
-
-        arrayObject.realm?.beginWrite()
-        for _ in 0..<10 {
-            arrayObject.array.append(SwiftObject())
-        }
-        try! arrayObject.realm?.commitWrite()
-
-        XCTAssertEqual(10, arrayObject.array.count)
-
-        for object in arrayObject.array {
-            XCTAssertEqual(123, object.intCol)
-            XCTAssertEqual(false, object.objectCol!.boolCol)
-            XCTAssertEqual(0, object.arrayCol.count)
-        }
-    }
-}
-
-class ListStandaloneTests: ListTests {
-    override func createArray() -> SwiftArrayPropertyObject {
-        let array = SwiftArrayPropertyObject()
-        XCTAssertNil(array.realm)
-        return array
-    }
-
-    override func createArrayWithLinks() -> SwiftListOfSwiftObject {
-        let array = SwiftListOfSwiftObject()
-        XCTAssertNil(array.realm)
-        return array
-    }
-}
-
-class ListNewlyAddedTests: ListTests {
-    override func createArray() -> SwiftArrayPropertyObject {
-        let array = SwiftArrayPropertyObject()
-        array.name = "name"
-        let realm = realmWithTestPath()
-        try! realm.write { realm.add(array) }
-
-        XCTAssertNotNil(array.realm)
-        return array
-    }
-
-    override func createArrayWithLinks() -> SwiftListOfSwiftObject {
-        let array = SwiftListOfSwiftObject()
-        let realm = try! Realm()
-        try! realm.write { realm.add(array) }
-
-        XCTAssertNotNil(array.realm)
-        return array
-    }
-}
-
-class ListNewlyCreatedTests: ListTests {
-    override func createArray() -> SwiftArrayPropertyObject {
-        let realm = realmWithTestPath()
-        realm.beginWrite()
-        let array = realm.create(SwiftArrayPropertyObject.self, value: ["name", [], []])
-        try! realm.commitWrite()
-
-        XCTAssertNotNil(array.realm)
-        return array
-    }
-
-    override func createArrayWithLinks() -> SwiftListOfSwiftObject {
-        let realm = try! Realm()
-        realm.beginWrite()
-        let array = realm.create(SwiftListOfSwiftObject.self)
-        try! realm.commitWrite()
-
-        XCTAssertNotNil(array.realm)
-        return array
-    }
-}
-
-class ListRetrievedTests: ListTests {
-    override func createArray() -> SwiftArrayPropertyObject {
-        let realm = realmWithTestPath()
-        realm.beginWrite()
-        realm.create(SwiftArrayPropertyObject.self, value: ["name", [], []])
-        try! realm.commitWrite()
-        let array = realm.objects(SwiftArrayPropertyObject.self).first!
-
-        XCTAssertNotNil(array.realm)
-        return array
-    }
-
-    override func createArrayWithLinks() -> SwiftListOfSwiftObject {
-        let realm = try! Realm()
-        realm.beginWrite()
-        realm.create(SwiftListOfSwiftObject.self)
-        try! realm.commitWrite()
-        let array = realm.objects(SwiftListOfSwiftObject.self).first!
-
-        XCTAssertNotNil(array.realm)
-        return array
-    }
-}
+}*/

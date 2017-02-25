@@ -612,7 +612,7 @@ RLM_ARRAY_TYPE(NotARealClass)
 
 - (void)testClassWithInvalidNSNumberProtocolProperty {
     RLMAssertThrowsWithReasonMatching([RLMObjectSchema schemaForObjectClass:InvalidNSNumberProtocolObject.class],
-                                      @"Property 'number' is of type 'NSNumber<NSFastEnumeration>' which is not a supported NSNumber object type.");
+                                      @"Property 'number' is of type \"NSNumber<NSFastEnumeration>\" which is not a supported NSNumber object type.");
 }
 
 - (void)testClassWithInvalidNSNumberNoProtocolProperty {
