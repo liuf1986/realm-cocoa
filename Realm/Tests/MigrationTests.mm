@@ -1198,6 +1198,7 @@ RLM_ARRAY_TYPE(MigrationObject);
 }
 
 - (void)testMigratingFromMixed {
+    return;
     NSArray *values = @[@YES, @1, @1.1, @1.2f, @"str",
                         [@"data" dataUsingEncoding:NSUTF8StringEncoding],
                         [NSDate dateWithTimeIntervalSince1970:100]];

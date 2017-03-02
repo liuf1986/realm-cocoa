@@ -892,9 +892,11 @@
     ArrayPropertyObject *array = [ArrayPropertyObject createInRealm:realm withValue:@[@"arrayObject", @[], @[]]];
     NSSet *stringSet = [NSSet setWithArray:@[[[StringObject alloc] initWithValue:@[@"a"]]]];
     [array setValue:stringSet forKey:@"array"];
-    XCTAssertEqualObjects([[array valueForKey:@"array"] valueForKey:@"stringCol"], [[stringSet allObjects] valueForKey:@"stringCol"]);
+    XCTAssertEqualObjects([[array valueForKey:@"array"] valueForKey:@"stringCol"],
+                          [[stringSet allObjects] valueForKey:@"stringCol"]);
     [array setValue:[stringSet allObjects] forKey:@"array"];
-    XCTAssertEqualObjects([[array valueForKey:@"array"] valueForKey:@"stringCol"], [[stringSet allObjects] valueForKey:@"stringCol"]);
+    XCTAssertEqualObjects([[array valueForKey:@"array"] valueForKey:@"stringCol"],
+                          [[stringSet allObjects] valueForKey:@"stringCol"]);
     [realm commitWriteTransaction];
 }
 
