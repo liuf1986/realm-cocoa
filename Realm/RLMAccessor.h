@@ -18,7 +18,6 @@
 
 #import <Foundation/Foundation.h>
 
-
 @class RLMObjectSchema, RLMProperty, RLMObjectBase, RLMProperty;
 
 #ifdef __cplusplus

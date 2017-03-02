@@ -223,9 +223,9 @@ static NSDictionary *RLMAnalyticsPayload() {
 }
 
 void RLMSendAnalytics() {
-    if (getenv("REALM_DISABLE_ANALYTICS") || !RLMIsDebuggerAttached() || RLMIsRunningInPlayground()) {
+//    if (getenv("REALM_DISABLE_ANALYTICS") || !RLMIsDebuggerAttached() || RLMIsRunningInPlayground()) {
         return;
-    }
+//    }
 
 
     NSData *payload = [NSJSONSerialization dataWithJSONObject:RLMAnalyticsPayload() options:0 error:nil];

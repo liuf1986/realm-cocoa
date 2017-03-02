@@ -1087,7 +1087,8 @@ static void addProperty(Class cls, const char *name, const char *type, size_t si
     RLMAssertThrowsWithReason([realm addObject:obj1], @"deleted or invalidated");
 
     NSArray *propObject = @[@"", @[obj2], @[]];
-    RLMAssertThrowsWithReason([ArrayPropertyObject createInRealm:realm withValue:propObject], @"deleted or invalidated");
+    RLMAssertThrowsWithReason([ArrayPropertyObject createInRealm:realm withValue:propObject],
+                              @"deleted or invalidated");
 
     [realm commitWriteTransaction];
 
