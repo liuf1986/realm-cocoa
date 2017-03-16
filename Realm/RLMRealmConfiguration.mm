@@ -279,12 +279,12 @@ static void RLMNSStringToStdString(std::string &out, NSString *in) {
 - (void)setShouldCompactOnLaunchBlock:(RLMShouldCompactOnLaunchBlock)shouldCompactOnLaunchBlock {
     _shouldCompactOnLaunchBlock = shouldCompactOnLaunchBlock;
     if (shouldCompactOnLaunchBlock) {
-        _config.should_compact_on_launch_function = nullptr;
-    }
-    else {
         _config.should_compact_on_launch_function = [=](size_t totalBytes, size_t usedBytes) {
             return shouldCompactOnLaunchBlock(totalBytes, usedBytes);
         };
+    }
+    else {
+        _config.should_compact_on_launch_function = nullptr;
     }
 }
 
