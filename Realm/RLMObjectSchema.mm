@@ -150,7 +150,9 @@ using namespace realm;
         if (!schema.primaryKeyProperty) {
             @throw RLMException(@"Primary key property '%@' does not exist on object '%@'", primaryKey, className);
         }
-        if (schema.primaryKeyProperty.type != RLMPropertyTypeInt && schema.primaryKeyProperty.type != RLMPropertyTypeString) {
+        if ((schema.primaryKeyProperty.type != RLMPropertyTypeInt
+             && schema.primaryKeyProperty.type != RLMPropertyTypeString)
+            || RLMPropertySubtypeIsInteger(schema.primaryKeyProperty.subtype)) {
             @throw RLMException(@"Only 'string' and 'int' properties can be designated the primary key");
         }
     }
