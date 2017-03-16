@@ -21,6 +21,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef BOOL (^RLMShouldCompactOnLaunchBlock)(NSUInteger totalBytes, NSUInteger bytesUsed);
+
 /**
  An `RLMRealmConfiguration` instance describes the different options used to
  create an instance of a Realm.
@@ -90,6 +92,9 @@ NS_ASSUME_NONNULL_BEGIN
  @note Setting this property to `YES` doesn't disable file format migrations.
  */
 @property (nonatomic) BOOL deleteRealmIfMigrationNeeded;
+
+/// TODO: Document.
+@property (nonatomic, copy, nullable) RLMShouldCompactOnLaunchBlock shouldCompactOnLaunchBlock;
 
 /// The classes managed by the Realm.
 @property (nonatomic, copy, nullable) NSArray *objectClasses;
