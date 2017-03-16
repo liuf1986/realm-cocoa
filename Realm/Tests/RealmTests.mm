@@ -1873,6 +1873,17 @@
     XCTAssertEqualObjects(@"B", [[StringObject allObjectsInRealm:realm].lastObject stringCol]);
 }
 
+// TODO: Write docs
+// TODO: Add test that underfull file doesn't compact
+// TODO: Add test that unset block doesn't compact
+// TODO: Add test that compact never gets called if there are cached Realms
+// TODO: Add interprocess test
+// TODO: Add Swift tests
+// TODO: Add comment saying that specific numbers in tests are a good thing
+// TODO: Figure out if we want to expose get_stats to users in general
+// TODO: Validate that you can only set a block for writable, on-disk, non-synced Realms
+// TODO: Can we detect if another process has a Realm open?
+
 - (NSArray *)pathsFor100Realms
 {
     NSMutableArray *paths = [NSMutableArray array];
