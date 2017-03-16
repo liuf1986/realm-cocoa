@@ -1822,6 +1822,34 @@
     XCTAssertGreaterThan(fileSizeBefore, fileSizeAfter);
 }
 
+- (void)testCompactOnLaunch
+{
+    NSUInteger count = 1000;
+    @autoreleasepool {
+        RLMRealm *realm = self.realmWithTestPath;
+        NSString *uuid = [[NSUUID UUID] UUIDString];
+        [realm transactionWithBlock:^{
+            [StringObject createInRealm:realm withValue:@[@"A"]];
+            for (NSUInteger i = 0; i < count; ++i) {
+                [StringObject createInRealm:realm withValue:@[uuid]];
+            }
+            [StringObject createInRealm:realm withValue:@[@"B"]];
+        }];
+    }
+    auto fileSize = ^(NSString *path) {
+        NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+        return [(NSNumber *)attributes[NSFileSize] unsignedLongLongValue];
+    };
+    unsigned long long fileSizeBefore = fileSize(RLMTestRealmURL().path);
+    RLMRealm *realm = self.realmWithTestPath;
+    unsigned long long fileSizeAfter = fileSize(realm.configuration.fileURL.path);
+    XCTAssertGreaterThan(fileSizeBefore, fileSizeAfter);
+
+    XCTAssertEqual([[StringObject allObjectsInRealm:realm] count], count + 2);
+    XCTAssertEqualObjects(@"A", [[StringObject allObjectsInRealm:realm].firstObject stringCol]);
+    XCTAssertEqualObjects(@"B", [[StringObject allObjectsInRealm:realm].lastObject stringCol]);
+}
+
 - (NSArray *)pathsFor100Realms
 {
     NSMutableArray *paths = [NSMutableArray array];
