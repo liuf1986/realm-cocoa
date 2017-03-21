@@ -33,11 +33,8 @@
 // and other internals unrelated to what this is testing, but it's probably useful
 // to know if they ever change, so we have the test fail if these numbers fluctuate.
 NSUInteger expectedTotalBytesBefore = 655360;
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-NSUInteger expectedUsedBytesBefore = 69376;
-#else
-NSUInteger expectedUsedBytesBefore = 70144;
-#endif
+NSUInteger expectedUsedBytesBefore = 70000;
+NSUInteger expectedUsedBytesBeforeMargin = 1024; // allow for +-1KB variation across platforms
 NSUInteger expectedTotalBytesAfter = 73728;
 NSUInteger count = 1000;
 
@@ -89,7 +86,7 @@ NSUInteger count = 1000;
     configuration.shouldCompactOnLaunchBlock = ^BOOL(NSUInteger totalBytes, NSUInteger usedBytes){
         // Confirm expected sizes
         XCTAssertEqual(totalBytes, expectedTotalBytesBefore);
-        XCTAssertEqual(usedBytes, expectedUsedBytesBefore);
+        XCTAssertEqualWithAccuracy(usedBytes, expectedUsedBytesBefore, expectedUsedBytesBeforeMargin);
 
         // Compact if the file is over 500KB in size and less than 20% 'used'
         // In practice, users might want to use values closer to 100MB and 50%
@@ -135,7 +132,7 @@ NSUInteger count = 1000;
     configurationWithCompactBlock.shouldCompactOnLaunchBlock = ^BOOL(NSUInteger totalBytes, NSUInteger usedBytes){
         // Confirm expected sizes
         XCTAssertEqual(totalBytes, expectedTotalBytesBefore);
-        XCTAssertEqual(usedBytes, expectedUsedBytesBefore);
+        XCTAssertEqualWithAccuracy(usedBytes, expectedUsedBytesBefore, expectedUsedBytesBeforeMargin);
 
         // Always attempt to compact
         return YES;
@@ -159,7 +156,8 @@ NSUInteger count = 1000;
     configuration.shouldCompactOnLaunchBlock = ^BOOL(NSUInteger totalBytes, NSUInteger usedBytes){
         // Confirm expected sizes
         XCTAssertEqual(totalBytes, expectedTotalBytesBefore);
-        XCTAssertEqual(usedBytes, expectedUsedBytesBefore);
+        XCTAssertEqualWithAccuracy(usedBytes, expectedUsedBytesBefore, expectedUsedBytesBeforeMargin);
+
         // Don't compact.
         return NO;
     };
