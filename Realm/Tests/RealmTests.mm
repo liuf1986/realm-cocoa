@@ -1961,7 +1961,6 @@
 
 // TODO: Write docs
 // TODO: Split up tests
-// TODO: Add test that compact never gets called if another process is accessing the Realm
 // TODO: Add Swift tests
 // TODO: Validate that you can only set a block for writable, on-disk, non-synced Realms
 
