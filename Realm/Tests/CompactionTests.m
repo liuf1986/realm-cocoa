@@ -35,7 +35,8 @@
 NSUInteger expectedTotalBytesBefore = 655360;
 NSUInteger expectedUsedBytesBefore = 70000;
 NSUInteger expectedUsedBytesBeforeMargin = 1024; // allow for +-1KB variation across platforms
-NSUInteger expectedTotalBytesAfter = 73728;
+NSUInteger expectedTotalBytesAfter = 75000;
+NSUInteger expectedTotalBytesAfterMargin = 10240; // allow for +-10KB variation across platforms
 NSUInteger count = 1000;
 
 #pragma mark - Helpers
@@ -97,7 +98,7 @@ NSUInteger count = 1000;
     // Confirm expected sizes before and after opening the Realm
     XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesBefore);
     RLMRealm *realm = [RLMRealm realmWithConfiguration:configuration error:nil];
-    XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesAfter);
+    XCTAssertEqualWithAccuracy([self fileSize:configuration.fileURL], expectedTotalBytesAfter, expectedTotalBytesAfterMargin);
 
     // Validate that the file still contains what it should
     XCTAssertEqual([[StringObject allObjectsInRealm:realm] count], count + 2);
