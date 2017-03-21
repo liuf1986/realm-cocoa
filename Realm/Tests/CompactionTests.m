@@ -34,7 +34,11 @@
 // to know if they ever change, so it's preferable to have the test fail if these
 // exact numbers fluctuate.
 NSUInteger expectedTotalBytesBefore = 655360;
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+NSUInteger expectedUsedBytesBefore = 69376;
+#else
 NSUInteger expectedUsedBytesBefore = 70144;
+#endif
 NSUInteger expectedTotalBytesAfter = 73728;
 NSUInteger count = 1000;
 
