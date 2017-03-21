@@ -1928,10 +1928,38 @@
         XCTAssertEqualObjects(@"A", [[StringObject allObjectsInRealm:realm].firstObject stringCol]);
         XCTAssertEqualObjects(@"B", [[StringObject allObjectsInRealm:realm].lastObject stringCol]);
     }
+
+    // Test that compact never gets called if there are cached Realms
+    @autoreleasepool {
+        // Access Realm before opening it with a compaction block
+        RLMRealmConfiguration *configuration = [RLMRealmConfiguration defaultConfiguration];
+        configuration.fileURL = RLMTestRealmURL();
+        __unused RLMRealm *firstRealm = [RLMRealm realmWithConfiguration:configuration error:nil];
+
+        // Configure the Realm to compact on launch
+        RLMRealmConfiguration *configurationWithCompactBlock = [configuration copy];
+        configurationWithCompactBlock.shouldCompactOnLaunchBlock = ^BOOL(NSUInteger totalBytes, NSUInteger usedBytes){
+            // Confirm expected sizes
+            XCTAssertEqual(totalBytes, expectedTotalBytesBefore);
+            XCTAssertEqual(usedBytes, expectedUsedBytesBefore);
+
+            // Always attempt to compact
+            return YES;
+        };
+
+        // Confirm expected sizes before and after opening the Realm
+        XCTAssertEqual(fileSize(configuration.fileURL.path), expectedTotalBytesBefore);
+        RLMRealm *realm = [RLMRealm realmWithConfiguration:configurationWithCompactBlock error:nil];
+        XCTAssertEqual(fileSize(configuration.fileURL.path), expectedTotalBytesBefore);
+
+        // Validate that the file still contains what it should
+        XCTAssertEqual([[StringObject allObjectsInRealm:realm] count], count + 2);
+        XCTAssertEqualObjects(@"A", [[StringObject allObjectsInRealm:realm].firstObject stringCol]);
+        XCTAssertEqualObjects(@"B", [[StringObject allObjectsInRealm:realm].lastObject stringCol]);
+    }
 }
 
 // TODO: Write docs
-// TODO: Add test that compact never gets called if there are cached Realms
 // TODO: Add test that compact never gets called if another process is accessing the Realm
 // TODO: Add Swift tests
 // TODO: Validate that you can only set a block for writable, on-disk, non-synced Realms
