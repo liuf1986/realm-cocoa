@@ -32,7 +32,7 @@
 // Note: These exact numbers are very sensitive to changes in core's allocator
 // and other internals unrelated to what this is testing, but it's probably useful
 // to know if they ever change, so it's preferable to have the test fail if these
-// exact numbers eventually change.
+// exact numbers fluctuate.
 NSUInteger expectedTotalBytesBefore = 655360;
 NSUInteger expectedUsedBytesBefore = 70144;
 NSUInteger expectedTotalBytesAfter = 73728;
