@@ -45,23 +45,26 @@ NSUInteger count = 1000;
     return [(NSNumber *)attributes[NSFileSize] unsignedLongLongValue];
 }
 
-- (RLMRealm *)makeCompactableRealm:(NSUInteger)count {
-    RLMRealm *realm = self.realmWithTestPath;
-    NSString *uuid = [[NSUUID UUID] UUIDString];
-    [realm transactionWithBlock:^{
-        [StringObject createInRealm:realm withValue:@[@"A"]];
-        for (NSUInteger i = 0; i < count; ++i) {
-            [StringObject createInRealm:realm withValue:@[uuid]];
-        }
-        [StringObject createInRealm:realm withValue:@[@"B"]];
-    }];
-    return realm;
+- (void)setUp {
+    [super setUp];
+    @autoreleasepool {
+        // Make compactable Realm
+        RLMRealm *realm = self.realmWithTestPath;
+        NSString *uuid = [[NSUUID UUID] UUIDString];
+        [realm transactionWithBlock:^{
+            [StringObject createInRealm:realm withValue:@[@"A"]];
+            for (NSUInteger i = 0; i < count; ++i) {
+                [StringObject createInRealm:realm withValue:@[uuid]];
+            }
+            [StringObject createInRealm:realm withValue:@[@"B"]];
+        }];
+    }
 }
 
 #pragma mark - Tests
 
 - (void)testCompact {
-    RLMRealm *realm = [self makeCompactableRealm:count];
+    RLMRealm *realm = self.realmWithTestPath;
     unsigned long long fileSizeBefore = [self fileSize:realm.configuration.fileURL];
     StringObject *object = [StringObject allObjectsInRealm:realm].firstObject;
 
@@ -77,10 +80,6 @@ NSUInteger count = 1000;
 }
 
 - (void)testSuccessfulCompactOnLaunch {
-    @autoreleasepool {
-        [self makeCompactableRealm:count];
-    }
-
     // Configure the Realm to compact on launch
     RLMRealmConfiguration *configuration = [RLMRealmConfiguration defaultConfiguration];
     configuration.fileURL = RLMTestRealmURL();
@@ -107,10 +106,6 @@ NSUInteger count = 1000;
 }
 
 - (void)testNoBlockCompactOnLaunch {
-    @autoreleasepool {
-        [self makeCompactableRealm:count];
-    }
-
     // Configure the Realm to compact on launch
     RLMRealmConfiguration *configuration = [RLMRealmConfiguration defaultConfiguration];
     configuration.fileURL = RLMTestRealmURL();
@@ -126,10 +121,6 @@ NSUInteger count = 1000;
 }
 
 - (void)testCachedRealmCompactOnLaunch {
-    @autoreleasepool {
-        [self makeCompactableRealm:count];
-    }
-
     // Test that compact never gets called if there are cached Realms
     // Access Realm before opening it with a compaction block
     RLMRealmConfiguration *configuration = [RLMRealmConfiguration defaultConfiguration];
@@ -159,10 +150,6 @@ NSUInteger count = 1000;
 }
 
 - (void)testReturnNoCompactOnLaunch {
-    @autoreleasepool {
-        [self makeCompactableRealm:count];
-    }
-
     // Configure the Realm to compact on launch
     RLMRealmConfiguration *configuration = [RLMRealmConfiguration defaultConfiguration];
     configuration.fileURL = RLMTestRealmURL();
