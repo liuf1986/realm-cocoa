@@ -76,6 +76,30 @@
     }
 }
 
+- (void)testCompactOnLaunchWaitIndefinitely {
+    if (self.isParent) {
+        RLMRealm *realm = [RLMRealm defaultRealm];
+        [realm beginWriteTransaction];
+        RLMRunChildAndWait(); // runs the event loop
+        [realm cancelWriteTransaction];
+    } else {
+        unsigned long long (^fileSize)(NSString *) = ^unsigned long long(NSString *path) {
+            NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+            return [(NSNumber *)attributes[NSFileSize] unsignedLongLongValue];
+        };
+
+        RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+        config.shouldCompactOnLaunchBlock = ^BOOL(__unused NSUInteger totalBytes, __unused NSUInteger usedBytes){
+            return YES;
+        };
+        unsigned long long sizeBefore = fileSize(config.fileURL.path);
+        RLMRealm *realm = [RLMRealm realmWithConfiguration:config error:nil];
+        unsigned long long sizeAfter = fileSize(config.fileURL.path);
+        XCTAssertGreaterThan(sizeBefore, sizeAfter);
+        XCTAssertTrue(realm.isEmpty);
+    }
+}
+
 - (void)testCompactOnLaunchFailSilently {
     if (self.isParent) {
         [[RLMRealm defaultRealm] transactionWithBlock:^{}];
