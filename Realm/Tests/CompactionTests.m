@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2014 Realm Inc.
+// Copyright 2017 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -186,6 +186,7 @@ NSUInteger count = 1000;
 
 // TODO: Write docs
 // TODO: Add Swift tests
+// TODO: Add Object Store tests
 // TODO: Validate that you can only set a block for writable, on-disk, non-synced Realms
 
 @end
