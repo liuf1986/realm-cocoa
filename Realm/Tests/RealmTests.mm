@@ -1934,7 +1934,6 @@
 // TODO: Add test that compact never gets called if there are cached Realms
 // TODO: Add test that compact never gets called if another process is accessing the Realm
 // TODO: Add Swift tests
-// TODO: Figure out if we want to expose get_stats to users in general
 // TODO: Validate that you can only set a block for writable, on-disk, non-synced Realms
 
 - (NSArray *)pathsFor100Realms
