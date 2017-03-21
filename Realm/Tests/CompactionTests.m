@@ -76,6 +76,36 @@ NSUInteger count = 1000;
     XCTAssertGreaterThan(fileSizeBefore, fileSizeAfter);
 }
 
+- (void)testSuccessfulCompactOnLaunch {
+    @autoreleasepool {
+        [self makeCompactableRealm:count];
+    }
+
+    // Configure the Realm to compact on launch
+    RLMRealmConfiguration *configuration = [RLMRealmConfiguration defaultConfiguration];
+    configuration.fileURL = RLMTestRealmURL();
+    configuration.shouldCompactOnLaunchBlock = ^BOOL(NSUInteger totalBytes, NSUInteger usedBytes){
+        // Confirm expected sizes
+        XCTAssertEqual(totalBytes, expectedTotalBytesBefore);
+        XCTAssertEqual(usedBytes, expectedUsedBytesBefore);
+
+        // Compact if the file is over 500KB in size and less than 20% 'used'
+        // In practice, users might want to use values closer to 100MB and 50%
+        NSUInteger fiveHundredKB = 500 * 1024;
+        return (totalBytes > fiveHundredKB) && (usedBytes / totalBytes) < 0.2;
+    };
+
+    // Confirm expected sizes before and after opening the Realm
+    XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesBefore);
+    RLMRealm *realm = [RLMRealm realmWithConfiguration:configuration error:nil];
+    XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesAfter);
+
+    // Validate that the file still contains what it should
+    XCTAssertEqual([[StringObject allObjectsInRealm:realm] count], count + 2);
+    XCTAssertEqualObjects(@"A", [[StringObject allObjectsInRealm:realm].firstObject stringCol]);
+    XCTAssertEqualObjects(@"B", [[StringObject allObjectsInRealm:realm].lastObject stringCol]);
+}
+
 - (void)testNoBlockCompactOnLaunch {
     @autoreleasepool {
         [self makeCompactableRealm:count];
@@ -147,36 +177,6 @@ NSUInteger count = 1000;
     XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesBefore);
     RLMRealm *realm = [RLMRealm realmWithConfiguration:configuration error:nil];
     XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesBefore);
-
-    // Validate that the file still contains what it should
-    XCTAssertEqual([[StringObject allObjectsInRealm:realm] count], count + 2);
-    XCTAssertEqualObjects(@"A", [[StringObject allObjectsInRealm:realm].firstObject stringCol]);
-    XCTAssertEqualObjects(@"B", [[StringObject allObjectsInRealm:realm].lastObject stringCol]);
-}
-
-- (void)testSuccessfulCompactOnLaunch {
-    @autoreleasepool {
-        [self makeCompactableRealm:count];
-    }
-
-    // Configure the Realm to compact on launch
-    RLMRealmConfiguration *configuration = [RLMRealmConfiguration defaultConfiguration];
-    configuration.fileURL = RLMTestRealmURL();
-    configuration.shouldCompactOnLaunchBlock = ^BOOL(NSUInteger totalBytes, NSUInteger usedBytes){
-        // Confirm expected sizes
-        XCTAssertEqual(totalBytes, expectedTotalBytesBefore);
-        XCTAssertEqual(usedBytes, expectedUsedBytesBefore);
-
-        // Compact if the file is over 500KB in size and less than 20% 'used'
-        // In practice, users might want to use values closer to 100MB and 50%
-        NSUInteger fiveHundredKB = 500 * 1024;
-        return (totalBytes > fiveHundredKB) && (usedBytes / totalBytes) < 0.2;
-    };
-
-    // Confirm expected sizes before and after opening the Realm
-    XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesBefore);
-    RLMRealm *realm = [RLMRealm realmWithConfiguration:configuration error:nil];
-    XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesAfter);
 
     // Validate that the file still contains what it should
     XCTAssertEqual([[StringObject allObjectsInRealm:realm] count], count + 2);
