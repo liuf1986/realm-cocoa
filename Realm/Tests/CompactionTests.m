@@ -31,8 +31,7 @@
 
 // Note: These exact numbers are very sensitive to changes in core's allocator
 // and other internals unrelated to what this is testing, but it's probably useful
-// to know if they ever change, so it's preferable to have the test fail if these
-// exact numbers fluctuate.
+// to know if they ever change, so we have the test fail if these numbers fluctuate.
 NSUInteger expectedTotalBytesBefore = 655360;
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 NSUInteger expectedUsedBytesBefore = 69376;
