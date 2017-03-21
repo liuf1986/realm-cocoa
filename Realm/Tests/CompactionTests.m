@@ -163,6 +163,7 @@ NSUInteger count = 1000;
         // Don't compact.
         return NO;
     };
+
     // Confirm expected sizes before and after opening the Realm
     XCTAssertEqual([self fileSize:configuration.fileURL], expectedTotalBytesBefore);
     RLMRealm *realm = [RLMRealm realmWithConfiguration:configuration error:nil];
