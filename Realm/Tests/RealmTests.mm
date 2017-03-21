@@ -1839,6 +1839,10 @@
     }
 
     // Expected sizes
+    // Note: These exact numbers are very sensitive to changes in core's allocator
+    // and other internals unrelated to what this is testing, but it's probably useful
+    // to know if they ever change, so it's preferable to have the test fail if these
+    // exact numbers eventually change.
     NSUInteger expectedTotalBytesBefore = 655360;
     NSUInteger expectedUsedBytesBefore = 70144;
     NSUInteger expectedTotalBytesAfter = 73728;
@@ -1879,7 +1883,6 @@
 // TODO: Add test that compact never gets called if there are cached Realms
 // TODO: Add interprocess test
 // TODO: Add Swift tests
-// TODO: Add comment saying that specific numbers in tests are a good thing
 // TODO: Figure out if we want to expose get_stats to users in general
 // TODO: Validate that you can only set a block for writable, on-disk, non-synced Realms
 // TODO: Can we detect if another process has a Realm open?
