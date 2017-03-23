@@ -34,7 +34,7 @@
 // to know if they ever change, so we have the test fail if these numbers fluctuate.
 NSUInteger expectedTotalBytesBefore = 655360;
 NSUInteger expectedUsedBytesBefore = 70000;
-NSUInteger expectedUsedBytesBeforeMargin = 1024; // allow for +-1KB variation across platforms
+NSUInteger expectedUsedBytesBeforeMargin = 2048; // allow for +-2KB variation across platforms
 NSUInteger expectedTotalBytesAfter = 75000;
 NSUInteger expectedTotalBytesAfterMargin = 10240; // allow for +-10KB variation across platforms
 NSUInteger count = 1000;
