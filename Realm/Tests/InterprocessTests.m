@@ -76,7 +76,7 @@
     }
 }
 
-- (void)testCompactOnLaunchWaitIndefinitely {
+- (void)testCompactOnLaunchBeginWriteFailed {
     if (self.isParent) {
         RLMRealm *realm = [RLMRealm defaultRealm];
         [realm beginWriteTransaction];
@@ -95,7 +95,7 @@
         unsigned long long sizeBefore = fileSize(config.fileURL.path);
         RLMRealm *realm = [RLMRealm realmWithConfiguration:config error:nil];
         unsigned long long sizeAfter = fileSize(config.fileURL.path);
-        XCTAssertGreaterThan(sizeBefore, sizeAfter);
+        XCTAssertEqual(sizeBefore, sizeAfter);
         XCTAssertTrue(realm.isEmpty);
     }
 }
